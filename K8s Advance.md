@@ -36,7 +36,7 @@
 - 查看 ReplicaSet： `kubectl get rs`
 - 修改副本数量：最好修改yaml file，也可以`kubectl scale rs nginx-rs --replicas=5`
 - 删除 ReplicaSet: `kubectl delete -f nginx-rs.yaml`，默认情况下也会级联删除其管理的 Pod
-- <mark>**在实际工作中，通常只需要写一个 `deployment.yaml`，不需要单独创建 `kind: ReplicaSet`或`pod` 的 YAML 文件。** Deployment 会自动创建和管理 ReplicaSet，而 ReplicaSet 再负责创建和管理 Pod。<mark>
+- <mark>**在实际工作中，通常只需要写一个 `deployment.yaml`，不需要单独创建 `kind: ReplicaSet`或`pod` 的 YAML 文件。** Deployment 会自动创建和管理 ReplicaSet，而 ReplicaSet 再负责创建和管理 Pod。</mark>
 
 ### ReplicaSet 在 Kubernetes Cluster 中是如何工作的？
 - 核心工作是：监控集群中的 Pod 数量，并通过 Reconciliation Loop，让实际 Pod 数量始终接近期望数量。
@@ -185,14 +185,14 @@
 		- Node 增减： 集群扩容或缩容时，需要管理可访问的 Node 地址
 		- 端口不方便： NodePort 默认端口范围为 `30000–32767`，而 Web 应用通常希望直接使用 80/443
 	- 虽然可以手动在 NodePort 前面配置一个External Load Balancer，但 Kubernetes 希望这个过程能够自动化, LoadBalancer Service 就是把External Load Balancer 和 Kubernetes Service 集成起来:
-		- <mark>提供统一的 External IP 或 DNS<mark>
+		- <mark>提供统一的 External IP 或 DNS</mark>
 		- 将外部流量分发到健康的后端
 		- 屏蔽 Node 的变化
 		- 可以与cloud platform的load balancing和health check能力集成
 	- **Note**: 
 		- LoadBalancer Service 并不是 Kubernetes 自己运行了一个负载均衡进程。它是通过 Kubernetes 的声明式 API，要求外部负载均衡实现提供并管理入口
 		- This only works with supported cloud platforms like GCP, AWS and Azure
-		- <mark>对于普通的 Kubernetes `LoadBalancer` Service，Kubernetes 通常会自动分配一个 `ClusterIP`，所以你不需要再单独创建一个 `type: ClusterIP` 的 Service。 `LoadBalancer` Service 同时具备 `ClusterIP` 和通常的 `NodePort` Service 的能力，同时支持内部和外部访问<mark>
+		- <mark>对于普通的 Kubernetes `LoadBalancer` Service，Kubernetes 通常会自动分配一个 `ClusterIP`，所以你不需要再单独创建一个 `type: ClusterIP` 的 Service。 `LoadBalancer` Service 同时具备 `ClusterIP` 和通常的 `NodePort` Service 的能力，同时支持内部和外部访问</mark>
 	- ```python
 	  apiVersion: v1
 	  kind: Service
@@ -209,8 +209,8 @@
 		      nodePort： 30080 #如果没有手动填写,kubernetes会自动分哦诶
 	  ```
 	- <img src="./images/k8s_services_4.png" width="500" alt="k8s_services_4">
-	- <mark>**LoadBalancer Service 的底层工作原理**<mark>
-		- <mark>**Control Plane: 创建与配置 Load Balancer Service**<mark>
+	- <mark>**LoadBalancer Service 的底层工作原理**</mark>
+		- <mark>**Control Plane: 创建与配置 Load Balancer Service**</mark>
 			- Step 1. 用户创建 LoadBalancer Service : `kubectl apply -f xxx.yaml`
 				- 请求发给 API Server, API Server 验证,并将 Service Object 持久化到 `etcd`
 			- Step 2. Kubernetes 创建 Service 内部访问配置，并维护 EndpointSlice
@@ -251,7 +251,7 @@
 					  ```
 				- 运行`kubectl get svc` 就能看到 `EXTERNAL_IP`
 				- **Note**: 这个过程是异步的。如果没有合适的 Load Balancer Controller 或云平台支持，`EXTERNAL-IP` 可能一直显示 `<pending>`
-		- <mark>**Data Plane：一个 HTTP Request 如何到达 Pod?**<mark>
+		- <mark>**Data Plane：一个 HTTP Request 如何到达 Pod?**</mark>
 			- Step 1. 用户访问`203.0.113.10:80`, 请求到达 External Load Balancer
 			- Step 2. Load Balancer 根据其配置的 Target Group、健康检查及负载均衡算法，选择 Node A
 				- 转发目的地址变为: `10.0.1.10:30080`
@@ -272,7 +272,7 @@
 	- Network Isolation：结合 NetworkPolicy 限制不同 Namespace 的网络通信
 - Note: 
 	- Namespace 默认只提供逻辑上的资源划分，不等于物理隔离，也不意味着网络自动隔离. 例如，`development` 和 `production` 中的 Pods 仍然可能运行在同一个 Node 上，而且默认情况下，它们通常可以通过网络互相通信
-	- <mark>每个 Namespaced Resource 都有且只有一个 Namespace。<mark> 一个 Deployment、ReplicaSet、Pod 或 Service 只能属于一个 Namespace，不能同时属于多个 Namespace。
+	- <mark>每个 Namespaced Resource 都有且只有一个 Namespace。</mark> 一个 Deployment、ReplicaSet、Pod 或 Service 只能属于一个 Namespace，不能同时属于多个 Namespace。
 	- 不是所有 Kubernetes 资源都属于 Namespace. 
 		- 可以通过`kubectl api-resources --namespaced=true` 查询哪些资源支持 Namespace
 		- 当你创建一个 Deployment 时，API Server 会根据 `metadata.namespace` 确定其所属的 Namespace
