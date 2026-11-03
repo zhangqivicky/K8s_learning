@@ -1,7 +1,7 @@
-an open-source container orchestration platform that automates the deployment, scaling, and management of containerized applications.
+an <mark>open-source container orchestration platform<mark> that automates the deployment, scaling, and management of containerized applications.
 ### **How does k8s work?**
 Kubernetes follows a **control plane and worker node architecture** and uses a **declarative model** to manage containerized applications
-* **Declarative Model**: Users define the desired state of their applications through **YAML manifests(也可以称作 Declarative Infrastructure Configuration)**, such as the number of replicas, container images, and resource requirements. Kubernetes continuously reconciles the actual state with the desired state.
+* <mark>**Declarative Model**<mark>: Users define the desired state of their applications through **YAML manifests(也可以称作 Declarative Infrastructure Configuration)**, such as the number of replicas, container images, and resource requirements. <mark>Kubernetes continuously reconciles the actual state with the desired state.<mark>
 
 | 对比     | Declarative 声明式                                             | Imperative 命令式                                    |
 | ------ | ----------------------------------------------------------- | ------------------------------------------------- |
@@ -11,9 +11,9 @@ Kubernetes follows a **control plane and worker node architecture** and uses a *
 | 配置管理   | 配置保存在文件中，方便版本控制、审查和重复部署                                     | 直接修改资源，需要额外记录操作才能追踪变化                             |
 | 后续维护   | 控制器持续维持期望状态                                                 | 控制器同样持续维持修改后的期望状态                                 |
 
-* **Control Plane**: manages the cluster   
+* <mark>**Control Plane**<mark>: manages the cluster   
   * API Server, ETCD, Controller Manager,Scheduler ,Kubelet, Container Runtime(execute process for other components in control plane)
-* **Worker Nodes**: run the actual application workloads.  
+* <mark>**Worker Nodes**<mark>: run the actual application workloads.  
   * Pods,  kube-proxy, Kubelet, Container Runtime(run the application codes)
 
 <img src="./images/k8s_2.png" width="500" alt="k8s_2">
@@ -59,7 +59,7 @@ It also provides important features like **automatic scheduling**, **self-healin
 | `ONBUILD`           | 注册触发指令，在其他镜像以当前镜像为基础构建时执行。                  |
 
 3. **Push Image to Container Registry**, 例如 Amazon ECR  
-   - `Docker Image`：打包好的应用运行模板，Container Registry：存储和管理 Container Images
+   - `Docker Image`：打包好的应用运行模板，<mark>Container Registry：存储和管理 Container Images<mark>
    - `docker build -t <image-name>:<tag> <build-context>`  
    - `docker push \<registry\>/\<image-name\>:\<tag\>`  
    - `docker pull \<registry\>/\<image-name\>:\<tag\>
@@ -80,16 +80,16 @@ It also provides important features like **automatic scheduling**, **self-healin
 
 ### **API Server**
 
-entry point for all cluster operations. It validates requests and persists cluster state in etcd.
-* it exposes the Kubernetes API which is used by external users to perform management operations on the cluster  
+<mark>entry point for all cluster operations<mark>. It validates requests and persists cluster state in etcd.
+* it exposes <mark>the Kubernetes API<mark> which is used by external users to perform management operations on the cluster  
   * authenticate User, validate request, retrieve data, update ETCD, scheduler, Kubelet  
 * **kubectl** command can call the kubernetes api
 
 <img src="./images/k8s_apiserver_1.png" width="500" alt="k8s_apiserver_1">
 
 ### **ETCD (/etc \+ distributed)**
-etc: editable text configuration
-A distributed key-value store that stores the cluster's configuration and state, not application data
+<mark>A distributed key-value store<mark> that stores the cluster's configuration and state, not application data
+* etc: editable text configuration
 * all commands starts with `kubectl get` is from etcd server
 
 #### **Desired /Actual state 在etcd以什么形式存储?**
@@ -100,7 +100,7 @@ A distributed key-value store that stores the cluster's configuration and state,
 	- Kubernetes API Server 会把 YAML 中的 Configuration(通常spec里的data)转换成 Go Struct（Kubernetes API Object），然后使用 Protobuf 将 Go Struct 序列化成 Binary Bytes，最后存储到 etcd  
 ### **Controller-Manager**: 
 
-continuously monitor cluster state through the API Server and take actions to reconcile **actual state** with **desired state**.
+<mark>continuously monitor cluster state<mark> through the API Server and take actions to <mark>reconcile **actual state**<mark> with <mark>**desired state**<mark>.
 
 #### **Controller种类**
 - **Node-controller**: 
@@ -161,11 +161,11 @@ get看状态，describe看具体内容
 
 ### **Scheduler** 
 
-Watches for unscheduled Pods and assigns them to suitable worker nodes based on resource availability and scheduling constraints. 唯一的作用！
+Watches for unscheduled Pods and assigns them to suitable worker nodes based on resource availability and scheduling constraints. <mark>唯一的作用！<mark>
 * the scheduler continuously monitor the API server for any pod update event  
 * the scheduler looks at each pod and tries to find the best node for it (Filter → Score → Select Node) 
 #### **Kubernetes如何schedule pod to a node?**
-Kubernetes 使用 **List/Watch \+ Event-driven mechanism** 来触发 Scheduling
+<mark>Kubernetes 使用 **List/Watch \+ Event-driven mechanism** 来触发 Scheduling<mark>
 * **Trigger 1: Scheduler Startup(List)**
 	* Scheduler 启动后，Informer 执行 **Initial LIST**  
 	    * Pod Informer 向 API Server 请求: GET /api/v1/pods  
@@ -215,7 +215,7 @@ Kubernetes 使用 **List/Watch \+ Event-driven mechanism** 来触发 Scheduling
 
 ## **Worker Nodes**
 
-一个node里可以运行一个或多个pods，一个 Pod 可以包含一个或多个 Container，而 Container 是根据 Container Image 创建的. 一个Container Image通常是由一个Microservice Application构建
+<mark>一个node里可以运行一个或多个pods，一个 Pod 可以包含一个或多个 Container，而 Container 是根据 Container Image 创建的. 一个Container Image通常是由一个Microservice Application构建<mark>
 * **Container**：真正运行 Application Code 的地方  
 * **Pod**：包含一个或多个 Containers，为它们提供共享的网络和存储环境  
 * **Node**：实际运行 Pod 的机器，可以是 Virtual Machine 或 Physical Machine
@@ -224,13 +224,13 @@ Kubernetes 使用 **List/Watch \+ Event-driven mechanism** 来触发 Scheduling
 
 ### **Pods**
 
-Kubernetes does not deploy containers directly on the worker nodes. The containers are encapsulated into a Kubernetes object known as pods. A pod is a single instance of an application. A pod is the smallest object that you can create in Kubernetes.
+Kubernetes does not deploy containers directly on the worker nodes. The containers are encapsulated into a Kubernetes object known as pods. A pod is a single instance of an application. <mark>A pod is the smallest object that you can create in Kubernetes.<mark>
 
 Pods usually have a 1to1 relationship with containers running your application. 1 pod can have multiple containers, but they usually don’t. To scale up, you create new pods, to scale down you delete existing pods. You do not add additional containers to existing pods to scale your system.
 
 #### **Why do we need Pods?**
 
-Pod 解决的是Container 如何被组织成一个可调度、可管理的应用运行单元（Deployment and Scheduling Unit). A pod is the smallest object you can create in Kubernetes.
+Pod 解决的是Container 如何被组织成一个可调度、可管理的应用运行单元（Deployment and Scheduling Unit).
 - 假如没有Pod，Kubernetes 直接管理 Containers， Container 为最小调度单元，Container A 被调度到 Node 1， Container B 被调度到 Node 2， Container C 被调度到 Node 3，这三个 Containers 本来需要紧密协作，现在却分布在不同机器上。
 - 即使只有一个 Container，Pod 仍然为 Kubernetes 提供了统一的抽象，让 Kubernetes 不需要为单 Container 和多 Container 设计两套完全不同的调度与管理机制。
 
@@ -339,11 +339,11 @@ Listen to instructions from the Kube API server and deploy or destroy containers
 每个 Worker Node 上的核心 Agent，负责管理该 Node 上的 Pods 和 Containers，确保它们按照 Kubernetes 声明的 Desired State 运行
 
 #### **Kubelet 如何manage container?**
-* **Flow1: Control Plane → Kubelet**  
+* <mark>**Flow1: Control Plane → Kubelet**<mark> 
 	* Kubelet 通过 Watch API Server 获取 Pod 的 Desired State。  
-* **Flow2: Kubelet → Container Runtime**  
+* <mark>**Flow2: Kubelet → Container Runtime**<mark>  
 	* Kubelet 比较 Desired State 和 Actual State，通过 CRI 调用 Container Runtime，让它创建、启动、停止或删除 Container  
-* 具体步骤如下：  
+* <mark>**具体步骤如下**<mark>：  
 	* **Step 1 — Scheduler Assigns Pod to Node**  
 		* Scheduler 通过 API Server 的 Binding API 将 Pod 绑定到 `worker-1`  
 	    * API Server 将pod assignment status 存入etcd中  
@@ -389,7 +389,7 @@ Listen to instructions from the Kube API server and deploy or destroy containers
 
 ### **Kube-Proxy**
 
-is a Kubernetes networking component responsible for implementing Service routing and load balancing==.Implements Service networking rules to route traffic to appropriate Pod endpoints (in clusters that use kube-proxy)
+is a Kubernetes networking component responsible for implementing <mark>Service routing and load balancing<mark>.Implements Service networking rules to route traffic to appropriate Pod endpoints (in clusters that use kube-proxy)
 #### **Why Do We Need kube-proxy?**  
 Pod 有自己的 IP，同一个 Pod 内的 Containers 共享同一个 Pod IP 和网络命名空间，因此同一个Pod里的container间通常可以通过 `localhost` 加`port`进行通信。
 
@@ -398,7 +398,7 @@ Pod 有自己的 IP，同一个 Pod 内的 Containers 共享同一个 Pod IP 和
 <img src="./images/k8s_proxy_1.png" width="500" alt="k8s_proxy_1">
 
 #### **Kubernetes如何解决不同pods间的访问问题**
-Kubernetes 通过**service和kube-proxy**来解决这个问题，让pod能被稳定地访问。
+<mark>Kubernetes 通过**service和kube-proxy**来解决这个问题，让pod能被稳定地访问。<mark>
 * Service 就是一个Kubernetes API Object，Service Name通过CoreDNS被解析为**ClusterIP(虚拟 IP）**它为一组动态变化的 Pods 提供稳定的访问入口  
 	* 有三种service: **NodePort, ClusterIP, Loadbalancer, Headless**  
 	* **Flow 1 — 创建 Service**  
