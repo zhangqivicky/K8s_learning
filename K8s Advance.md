@@ -36,12 +36,12 @@
 - 查看 ReplicaSet： `kubectl get rs`
 - 修改副本数量：最好修改yaml file，也可以`kubectl scale rs nginx-rs --replicas=5`
 - 删除 ReplicaSet: `kubectl delete -f nginx-rs.yaml`，默认情况下也会级联删除其管理的 Pod
-- ==🟡**在实际工作中，通常只需要写一个 `deployment.yaml`，不需要单独创建 `kind: ReplicaSet`或`pod` 的 YAML 文件。** Deployment 会自动创建和管理 ReplicaSet，而 ReplicaSet 再负责创建和管理 Pod。
-- 
+- <mark>**在实际工作中，通常只需要写一个 `deployment.yaml`，不需要单独创建 `kind: ReplicaSet`或`pod` 的 YAML 文件。** Deployment 会自动创建和管理 ReplicaSet，而 ReplicaSet 再负责创建和管理 Pod。<mark>
+
 ### ReplicaSet 在 Kubernetes Cluster 中是如何工作的？
 - 核心工作是：监控集群中的 Pod 数量，并通过 Reconciliation Loop，让实际 Pod 数量始终接近期望数量。
 - ReplicaSet 是 Kubernetes API Resource，而真正执行管理逻辑的是 ReplicaSet Controller。
-- ![[k8s_replicaset_1.png|672]]
+- <img src="./images/k8s_replicaset_1.png" width="500" alt="k8s_replicaset_1">
 - 常见的触发 ReplicaSet Controller的events
 	- Add ReplicaSet： 创建新的 ReplicaSet
 	- Update ReplicaSet：修改 `spec.replicas`、Pod Template 等
@@ -49,7 +49,8 @@
 	- Add Pod: 新 Pod 被创建，可能被某个 ReplicaSet 管理
 	- Update Pod: Pod Labels、OwnerReference、DeletionTimestamp、状态等发生变化
 	- Delete Pod: Pod 被删除，需要补充副本
-- **Event-Driven Reconciliation**![[k8s_replicaset_2.png|672]]
+- **Event-Driven Reconciliation**
+- <img src="./images/k8s_replicaset_2.png" width="500" alt="k8s_replicaset_2">
 ### Deployment
 - The deployment provides us with the capability to upgrade the underlying instances seamlessly using rolling updates, undo changes, pause and resume changes as required.
 - ```python
@@ -91,8 +92,9 @@
 		- 有些服务需要对外开放，有些只应该允许 Cluster 内部访问
 - 三种主要 Service 类型：ClusterIP、NodePort、LoadBalancer，它们最大的区别是：允许谁访问，以及客户端从哪里进入 Kubernetes Cluster。
 	- NodePort 在 ClusterIP 的基础上增加 Node port，LoadBalancer 通常在 NodePort 的基础上增加外部负载均衡器。不过，部分 LoadBalancer 实现可以直接把流量发送到 Pods，不经过 NodePort。
-	- 它们是三种不同的 Service 类型，但存在功能上的继承关系，不需要创建三个独立的 Service 才能工作. 例如你只创建一个 LoadBalancer, 在默认的、基于 NodePort 的实现中，Kubernetes 就会同时为这个 Service 提供：一个 ClusterIP, 一个 NodePort 和 一个 External Load Balancer 入口，这三个入口都指向同一组 Backend Pods。![[k8s_services_1.png]]
--  **ClusterIP ---- 解决 Cluster 内部的 Service-to-Service Communication **
+	- 它们是三种不同的 Service 类型，但存在功能上的继承关系，不需要创建三个独立的 Service 才能工作. 例如你只创建一个 LoadBalancer, 在默认的、基于 NodePort 的实现中，Kubernetes 就会同时为这个 Service 提供：一个 ClusterIP, 一个 NodePort 和 一个 External Load Balancer 入口，这三个入口都指向同一组 Backend Pods。
+ 	- <img src="./images/k8s_services_1.png" width="500" alt="k8s_services_1">
+-  **ClusterIP ---- 解决 Cluster 内部的 Service-to-Service Communication**
 	- **ClusterIP Service can help by grouping all pods together and provide a single interface for other pods to access this service**, the service randomly forward the requests to one of the pods.
 	- Each layer can now scale or move as required without impacting communication between the various services
 		- ```python
@@ -107,12 +109,12 @@
 				    port: 80 # Service 提供的端口
 				    protocol: TCP #指定 Service Port 使用的传输层协议，例如 TCP、UDP、SCTP
 				    appProtocol: http #指定 Service Port 承载的应用层协议，例如 HTTP、HTTP/2、gRPC。
-- 
+
 			  selector: 
 				    app: myapp
 				    type: back-end # 选择拥有 `app: backend` 标签的 Pods
 		  ```
-		- ![[k8s_services_2.png|452]]
+		- <img src="./images/k8s_services_2.png" width="500" alt="k8s_services_2">
 		- 实际 Request Flow：
 			- Frontend 发起 `http://backend-service:80/api/users`
 			- Cluster DNS（通常由 CoreDNS 提供）解析 Service 名称，得到 ClusterIP
@@ -127,7 +129,9 @@
 			- 如何保证流量始终进入能够处理对应 Service 的节点？
 			- 如何防止外部网络暴露不应该公开的内部 Service？
 		- 这些问题需要额外的网络控制组件解决。因此，实际工程中更常见的是利用外部 Load Balancer、Gateway API 或 Ingress Controller 提供专门的稳定入口，而不是直接暴露内部 ClusterIP![[k8s_services_6.png]]
-	- NodePort 的核心功能，就是在每个 Node 上开放一个固定端口，让集群外部的客户端可以通过 Node IP + NodePort 访问内部的 Pods。![[k8s_services_5.png]]
+       <img src="./images/k8s_services_6.png" width="500" alt="k8s_services_6">
+	- NodePort 的核心功能，就是在每个 Node 上开放一个固定端口，让集群外部的客户端可以通过 Node IP + NodePort 访问内部的 Pods。
+       <img src="./images/k8s_services_5.png" width="500" alt="k8s_services_5">
 		- 为什么集群外部的 Client 可以访问 Node IP，却不能直接访问 Pod IP？
 			- 关键在于：客户端所在的网络是否有到目标 IP 的有效路由，虽然也可以直接设置client到pod ip的路由，但pod ip通常不稳定，路由也会不稳定
 			- 判断客户端所在网络是否有到目标 IP 的有效路由，最直接的方法就是查看 Routing Table（路由表）
@@ -152,7 +156,8 @@
 			  selector: # specify which pod the target port is on
 					app: backend
 		  ```
-		![[k8s_services_3.png|498]]
+        <img src="./images/k8s_services_3.png" width="500" alt="k8s_services_3">
+		
 		- 具体步骤如下：
 			- Step 1. External Client 发送请求， 比如访问`192.168.1.10:30080`,请求通过网络到达 Node A
 			- Step 2. data packet到达 Node A 的网卡（NIC), 进入 Linux Kernel 的 Networking Stack
@@ -180,14 +185,14 @@
 		- Node 增减： 集群扩容或缩容时，需要管理可访问的 Node 地址
 		- 端口不方便： NodePort 默认端口范围为 `30000–32767`，而 Web 应用通常希望直接使用 80/443
 	- 虽然可以手动在 NodePort 前面配置一个External Load Balancer，但 Kubernetes 希望这个过程能够自动化, LoadBalancer Service 就是把External Load Balancer 和 Kubernetes Service 集成起来:
-		- ==🟡提供统一的 External IP 或 DNS==
+		- <mark>提供统一的 External IP 或 DNS<mark>
 		- 将外部流量分发到健康的后端
 		- 屏蔽 Node 的变化
 		- 可以与cloud platform的load balancing和health check能力集成
 	- **Note**: 
 		- LoadBalancer Service 并不是 Kubernetes 自己运行了一个负载均衡进程。它是通过 Kubernetes 的声明式 API，要求外部负载均衡实现提供并管理入口
 		- This only works with supported cloud platforms like GCP, AWS and Azure
-		- ==🟡对于普通的 Kubernetes `LoadBalancer` Service，Kubernetes 通常会自动分配一个 `ClusterIP`，所以你不需要再单独创建一个 `type: ClusterIP` 的 Service。 `LoadBalancer` Service 同时具备 `ClusterIP` 和通常的 `NodePort` Service 的能力，同时支持内部和外部访问==
+		- <mark>对于普通的 Kubernetes `LoadBalancer` Service，Kubernetes 通常会自动分配一个 `ClusterIP`，所以你不需要再单独创建一个 `type: ClusterIP` 的 Service。 `LoadBalancer` Service 同时具备 `ClusterIP` 和通常的 `NodePort` Service 的能力，同时支持内部和外部访问<mark>
 	- ```python
 	  apiVersion: v1
 	  kind: Service
@@ -203,9 +208,9 @@
 		      targetPort: 8080
 		      nodePort： 30080 #如果没有手动填写,kubernetes会自动分哦诶
 	  ```
-	- ![[k8s_services_4.png|408]]
-	- ==🟠**LoadBalancer Service 的底层工作原理**==
-		- ==🟠**Control Plane: 创建与配置 Load Balancer Service**==
+	- <img src="./images/k8s_services_4.png" width="500" alt="k8s_services_4">
+	- <mark>**LoadBalancer Service 的底层工作原理**<mark>
+		- <mark>**Control Plane: 创建与配置 Load Balancer Service**<mark>
 			- Step 1. 用户创建 LoadBalancer Service : `kubectl apply -f xxx.yaml`
 				- 请求发给 API Server, API Server 验证,并将 Service Object 持久化到 `etcd`
 			- Step 2. Kubernetes 创建 Service 内部访问配置，并维护 EndpointSlice
@@ -246,7 +251,7 @@
 					  ```
 				- 运行`kubectl get svc` 就能看到 `EXTERNAL_IP`
 				- **Note**: 这个过程是异步的。如果没有合适的 Load Balancer Controller 或云平台支持，`EXTERNAL-IP` 可能一直显示 `<pending>`
-		- ==🟠**Data Plane：一个 HTTP Request 如何到达 Pod?**==
+		- <mark>**Data Plane：一个 HTTP Request 如何到达 Pod?**<mark>
 			- Step 1. 用户访问`203.0.113.10:80`, 请求到达 External Load Balancer
 			- Step 2. Load Balancer 根据其配置的 Target Group、健康检查及负载均衡算法，选择 Node A
 				- 转发目的地址变为: `10.0.1.10:30080`
@@ -256,7 +261,7 @@
 			- Step 6. Pod 处理 Request, 并返回response
 -	`kubectl get svc backend-service`
 - **External Load Balancer 和 kube-proxy 的负载均衡有什么区别？**
-	- ![[k8s_services_7.png|618]]
+	- <img src="./images/k8s_services_7.png" width="500" alt="k8s_services_7">
 	- 注意：External LB 选中 Node B，并不意味着最终必须访问 Node B 上的 Pod，这取决于配置 `externalTrafficPolicy:` Cluster vs. Local, 默认是 `Cluster`
 ### Namespace
 - Namespace（命名空间）是一种在同一个 Kubernetes Cluster 内，对资源进行逻辑分组和隔离的机制。
@@ -267,14 +272,14 @@
 	- Network Isolation：结合 NetworkPolicy 限制不同 Namespace 的网络通信
 - Note: 
 	- Namespace 默认只提供逻辑上的资源划分，不等于物理隔离，也不意味着网络自动隔离. 例如，`development` 和 `production` 中的 Pods 仍然可能运行在同一个 Node 上，而且默认情况下，它们通常可以通过网络互相通信
-	- ==🟠每个 Namespaced Resource 都有且只有一个 Namespace。== 一个 Deployment、ReplicaSet、Pod 或 Service 只能属于一个 Namespace，不能同时属于多个 Namespace。
+	- <mark>每个 Namespaced Resource 都有且只有一个 Namespace。<mark> 一个 Deployment、ReplicaSet、Pod 或 Service 只能属于一个 Namespace，不能同时属于多个 Namespace。
 	- 不是所有 Kubernetes 资源都属于 Namespace. 
 		- 可以通过`kubectl api-resources --namespaced=true` 查询哪些资源支持 Namespace
 		- 当你创建一个 Deployment 时，API Server 会根据 `metadata.namespace` 确定其所属的 Namespace
 		- Kubernetes Cluster 中的 Resources（资源）可以分成两大类：Namespaced Resources 和 Cluster-scoped Resources
 			- Namespaced Resources：必须属于某一个 Namespace
 			- Cluster-scoped Resources：不属于任何 Namespace，而是在整个 Cluster 层级定义和管理的资源
-		- ![[k8s_namespace_1.png|520]]
+		- <img src="./images/k8s_namespace_1.png" width="500" alt="k8s_namespace_1">
 - 常用的commands:
 	- 查看现有 Namespace: 
 		- `kubectl get namespaces` 
@@ -410,5 +415,6 @@
 - **Namespace 和 Cluster 的区别**
 	- Cluster 是 Kubernetes 的管理和运行边界，Namespace 是 Cluster 内的逻辑资源划分
 	- Deployment、ReplicaSet、Pod 和 Service 等 Namespaced Resources 都属于某个 Namespace，而 Node 等 Cluster-scoped Resources 不属于任何 Namespace
-	- Namespace 默认不提供完整的安全隔离和网络隔离；需要搭配 RBAC、ResourceQuota 和 NetworkPolicy 等机制![[k8s_namespace_2.png]]
+	- Namespace 默认不提供完整的安全隔离和网络隔离；需要搭配 RBAC、ResourceQuota 和 NetworkPolicy 等机制
+   <img src="./images/k8s_namespace_2.png" width="500" alt="k8s_namespace_2">
 
